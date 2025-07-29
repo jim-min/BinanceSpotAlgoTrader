@@ -158,10 +158,33 @@ async function executeOrder({
     }
 }
 
+
+async function fetchAccountInfo() {
+    try {
+        logger.info(`Request made to fetch account information`);
+
+        /* To keep a log of the no. of order requests made */
+        logger.info(`COUNT[ACCOUNT] - New account info request API hit (GET)`);
+        const accountInfo = await generalRequestLimiter.schedule({ weight: 10 }, () =>
+            rawRequestLimiter.schedule({ weight: 10 }, () =>
+                makeApiCall(config.ACCOUNT_INFO_PATH, {}, "GET", true)
+            )
+        );
+
+        logger.info(`Account information fetched successfully`);
+        return accountInfo;
+    } catch (error) {
+        logger.error(`Error fetching account information with error: ${JSON.stringify(error, Object.getOwnPropertyNames(error), 2)}`);
+        throw error;
+    }
+}
+
 module.exports = {
     fetchMarketPrices,
     fetchBidAskPrices,
     checkOrderStatus,
     executeOrder,
-    cancelOrder
+    cancelOrder,
+    fetchAccountInfo
 }
+

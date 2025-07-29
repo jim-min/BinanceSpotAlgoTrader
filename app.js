@@ -1,43 +1,24 @@
-const { v4: uuidv4 } = require("uuid");
-const { performance } = require("perf_hooks");
-
-const { TRANSACTION_TEMPLATE } = require("./config/constants");
-const transaction1 = require("./transactions/transaction1");
+const { accountInfoLogging } = require("./utils/helpers");
 const logger = require("./utils/logger");
+const transaction1 = require("./transactions/transaction1");
 
-const WAIT_TIME = 1000; // Time in ms
+const PROCESS_ID = Math.floor(Math.random() * 100000);
 
-// Infinite loop to keep running indefinitely
-async function mainLoop() {
-    const transactionDetail = JSON.parse(JSON.stringify(TRANSACTION_TEMPLATE));
+async function main() {
+    const transactionDetail = {
+        processId: PROCESS_ID,
+        transactions: []
+    };
 
-    while (true) {
-        const processId = uuidv4(); // Unique ID of each tree
+    // Start continuous account info logging
+    accountInfoLogging();
 
-        transactionDetail["processId"] = processId;
-        transactionDetail["consumedTime"] = new Date();
-
-        const start = performance.now(); // Start timer
-
-        try {
-            await transaction1(transactionDetail);
-            logger.info(`${processId} processId cycle complete`);
-        } catch (error) {
-            logger.error(`${processId} processId cycle failed: ${error}`);
-        } finally {
-            const end = performance.now(), // End timer
-                timeTaken = ((end - start) / 1000).toFixed(2);
-
-            logger.info(`Time taken by ${processId}: ${timeTaken}s`);
-
-            if (timeTaken < 1) { // Time in seconds
-                await new Promise(resolve => setTimeout(resolve, WAIT_TIME)); // Wait and then restart
-            }
-
-            /* Uncomment the return statement below to run only a single process */
-            return;
-        }
+    // Start the trading logic
+    try {
+        await transaction1(transactionDetail);
+    } catch (error) {
+        logger.error(`${PROCESS_ID} - Error in main transaction process: ${error}`);
     }
 }
 
-mainLoop().catch(error => logger.error(`Code crashed: ${error}`));
+main();

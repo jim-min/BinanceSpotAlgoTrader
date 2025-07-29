@@ -225,6 +225,26 @@ function handleSubProcessError(error, transactionDetail, functionIndex, quantity
     return endSubProcess(transactionDetail, functionIndex, TRANSACTION_STATUS.ERROR, "Something went wrong");
 }
 
+const ACCOUNT_INFO_INTERVAL = 60000; // 1분마다 계정 정보 로깅
+
+async function accountInfoLogging() {
+    const { fetchAccountInfo } = require("../api/trading");
+    try {
+        const accountInfo = await fetchAccountInfo();
+        const balances = accountInfo.balances.filter(balance => parseFloat(balance.free) > 0 || parseFloat(balance.locked) > 0);
+        logger.info(`
+
+--- 현재 계정 자산 ---
+${JSON.stringify(balances, null, 2)}
+----------------------
+`);
+    } catch (error) {
+        logger.error(`계정 정보 조회 오류: ${error}`);
+    }
+
+    setTimeout(accountInfoLogging, ACCOUNT_INFO_INTERVAL);
+}
+
 module.exports = {
     getCapital,
     getQtyPrecision,
@@ -238,4 +258,5 @@ module.exports = {
     mapPriceResponseToOrder,
     endSubProcess,
     handleSubProcessError,
+    accountInfoLogging,
 };

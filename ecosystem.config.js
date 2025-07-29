@@ -2,7 +2,7 @@ module.exports = {
   apps: [{
       name: "app",
       script: "./app.js",
-      env: {
+      env_stage: {
           NODE_ENV: "stage",
       },
       env_prod: {
